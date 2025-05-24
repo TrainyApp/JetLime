@@ -2,6 +2,7 @@ import com.vanniktech.maven.publish.SonatypeHost
 import org.jetbrains.dokka.gradle.DokkaBasePlugin
 import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+import java.util.Base64
 
 plugins {
   alias(libs.plugins.android.library)
@@ -149,17 +150,28 @@ tasks {
   }
 }
 
+publishing {
+  repositories {
+    maven("https://europe-west3-maven.pkg.dev/mik-music/trainyapp") {
+      credentials {
+        username = "_json_key_base64"
+        password = System.getenv("GOOGLE_KEY")?.toByteArray()?.let {
+          Base64.getEncoder().encodeToString(it)
+        }
+      }
+
+      authentication {
+        create<BasicAuthentication>("basic")
+      }
+    }
+  }
+}
+
 mavenPublishing {
-  // Configure publishing to Maven Central
-  publishToMavenCentral(SonatypeHost.S01)
-
-  // Enable GPG signing for all publications
-  signAllPublications()
-
   val artifactId = "jetlime"
 
   // Define coordinates for the published artifact
-  coordinates("io.github.pushpalroy", artifactId, "3.0.1")
+  coordinates("com.trainyapp", artifactId, "3.1.0-SNAPSHOT")
 
   // Configure POM metadata for the published artifact
   pom {
