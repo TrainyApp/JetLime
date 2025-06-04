@@ -1,8 +1,6 @@
-import com.vanniktech.maven.publish.SonatypeHost
-import org.jetbrains.dokka.gradle.DokkaBasePlugin
 import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
-import java.util.Base64
+import java.util.*
 
 plugins {
   alias(libs.plugins.android.library)
@@ -171,7 +169,7 @@ mavenPublishing {
   val artifactId = "jetlime"
 
   // Define coordinates for the published artifact
-  coordinates("com.trainyapp", artifactId, "3.2.0-SNAPSHOT")
+  coordinates("com.trainyapp", artifactId, "3.3.0-SNAPSHOT")
 
   // Configure POM metadata for the published artifact
   pom {

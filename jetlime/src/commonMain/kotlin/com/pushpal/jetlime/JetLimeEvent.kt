@@ -116,6 +116,7 @@ internal fun VerticalEvent(
 ) {
   val verticalAlignment = remember { jetLimeStyle.lineVerticalAlignment }
   val radiusAnimFactor by calculateRadiusAnimFactor(style)
+  val lineBrush = style.lineBrush ?: jetLimeStyle.lineBrush
   Box(
     modifier = modifier
       .wrapContentSize()
@@ -132,7 +133,7 @@ internal fun VerticalEvent(
         if (style.position.isNotEnd()) {
           val yShift = yOffset * (jetLimeStyle.pointStartFactor - 1)
           drawLine(
-            brush = jetLimeStyle.lineBrush,
+            brush = lineBrush,
             start = Offset(
               x = xOffset,
               y = yOffset,
@@ -259,6 +260,8 @@ internal fun HorizontalEvent(
 ) {
   val horizontalAlignment = remember { jetLimeStyle.lineHorizontalAlignment }
   val radiusAnimFactor by calculateRadiusAnimFactor(style)
+  val lineBrush = style.lineBrush ?: jetLimeStyle.lineBrush
+
   Box(
     modifier = modifier
       .wrapContentSize()
@@ -275,7 +278,7 @@ internal fun HorizontalEvent(
         if (style.position.isNotEnd()) {
           val xShift = xOffset * (jetLimeStyle.pointStartFactor - 1)
           drawLine(
-            brush = jetLimeStyle.lineBrush,
+            brush = lineBrush,
             start = Offset(
               x = xOffset,
               y = yOffset,
