@@ -91,7 +91,7 @@ fun JetLimeExtendedEvent(
   val jetLimeStyle = LocalJetLimeStyle.current
   val strokeWidth = with(LocalDensity.current) { style.pointStrokeWidth.toPx() }
   val radiusAnimFactor by calculateRadiusAnimFactor(style)
-  val lineBrush = style.lineBrush ?: jetLimeStyle.lineBrush
+  val lineBrush = remember(style, jetLimeStyle) { style.lineBrush ?: jetLimeStyle.lineBrush }
 
   // BoxWithConstraints provides its own constraints which we can use for layout
   BoxWithConstraints(modifier = modifier) {

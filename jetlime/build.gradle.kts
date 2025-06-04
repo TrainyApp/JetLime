@@ -76,7 +76,7 @@ kotlin {
 
 android {
   namespace = "com.pushpal.jetlime"
-  compileSdk = 34
+  compileSdk = 35
 
   sourceSets["main"].manifest.srcFile("src/androidMain/AndroidManifest.xml")
   sourceSets["main"].res.srcDirs("src/androidMain/res")
@@ -169,7 +169,7 @@ mavenPublishing {
   val artifactId = "jetlime"
 
   // Define coordinates for the published artifact
-  coordinates("com.trainyapp", artifactId, "3.3.0-SNAPSHOT")
+  coordinates("com.trainyapp", artifactId, "3.3.1-SNAPSHOT")
 
   // Configure POM metadata for the published artifact
   pom {
