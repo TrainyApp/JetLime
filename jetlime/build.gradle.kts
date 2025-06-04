@@ -171,7 +171,7 @@ mavenPublishing {
   val artifactId = "jetlime"
 
   // Define coordinates for the published artifact
-  coordinates("com.trainyapp", artifactId, "3.1.0-SNAPSHOT")
+  coordinates("com.trainyapp", artifactId, "3.2.0-SNAPSHOT")
 
   // Configure POM metadata for the published artifact
   pom {

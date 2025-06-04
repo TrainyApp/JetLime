@@ -72,6 +72,7 @@ import com.pushpal.jetlime.Arrangement.VERTICAL
  * @param listState The state object to be used for the LazyColumn.
  * @param contentPadding The padding to apply to the content inside the LazyColumn.
  * @param key A factory of stable and unique keys representing the item. Using the same key for multiple items in the list is not allowed. Type of the key should be saveable via Bundle on Android. If null is passed the position in the list will represent the key.
+ * @param userScrollEnabled whether the column should be scrollable
  * @param itemContent A composable lambda that takes an index, an item of type [T], and an [EventPosition] to build each item's content.
  */
 @Composable
@@ -82,6 +83,7 @@ fun <T> JetLimeColumn(
   listState: LazyListState = rememberLazyListState(),
   contentPadding: PaddingValues = PaddingValues(0.dp),
   key: ((index: Int, item: T) -> Any)? = null,
+  userScrollEnabled: Boolean = true,
   itemContent: @Composable (index: Int, T, EventPosition) -> Unit,
 ) {
   CompositionLocalProvider(LocalJetLimeStyle provides style.alignment(VERTICAL)) {
@@ -92,7 +94,7 @@ fun <T> JetLimeColumn(
       verticalArrangement = Arrangement.Top,
       horizontalAlignment = Alignment.Start,
       flingBehavior = ScrollableDefaults.flingBehavior(),
-      userScrollEnabled = true,
+      userScrollEnabled = userScrollEnabled,
       contentPadding = contentPadding,
     ) {
       itemsIndexed(
