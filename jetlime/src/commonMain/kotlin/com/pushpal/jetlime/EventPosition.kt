@@ -74,9 +74,11 @@ class EventPosition internal constructor(val name: String) {
    * @return `true` if the current position is not the end, `false` otherwise.
    */
   @Stable
-  fun isNotEnd(): Boolean {
-    return this != END
-  }
+  fun isNotEnd(): Boolean = this != END
+
+  /** Helper to check if current position is not the start. */
+  @Stable
+  fun isNotStart(): Boolean = name != "Start"
 
   /**
    * Checks if this instance is equal to another object. Two instances of [EventPosition] are
@@ -97,7 +99,5 @@ class EventPosition internal constructor(val name: String) {
    *
    * @return A hash code value for this object.
    */
-  override fun hashCode(): Int {
-    return name.hashCode()
-  }
+  override fun hashCode(): Int = name.hashCode()
 }
