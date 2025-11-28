@@ -27,6 +27,7 @@ package com.pushpal.jetlime
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.absolutePadding
 import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.wrapContentSize
@@ -43,7 +44,9 @@ import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import androidx.compose.ui.graphics.drawscope.withTransform
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import com.pushpal.jetlime.Arrangement.HORIZONTAL
 import com.pushpal.jetlime.Arrangement.VERTICAL
@@ -126,26 +129,94 @@ internal fun VerticalEvent(
           VerticalAlignment.LEFT -> style.pointRadius.toPx()
           VerticalAlignment.RIGHT -> this.size.width - style.pointRadius.toPx()
         }
-        val yOffset = style.pointRadius.toPx() * jetLimeStyle.pointStartFactor
+        val yOffset = when (style.pointPlacement) {
+          PointPlacement.START -> style.pointRadius.toPx() * jetLimeStyle.pointStartFactor
+          PointPlacement.CENTER -> {
+            val effectiveHeight =
+              this.size.height -
+                if (style.position.isNotEnd()) jetLimeStyle.itemSpacing.toPx() else 0f
+            effectiveHeight / 2f
+          }
+
+          PointPlacement.END -> {
+            // Place at bottom minus radius (visual anchor). If not last, subtract spacing from height computation
+            val effectiveHeight =
+              this.size.height -
+                if (style.position.isNotEnd()) jetLimeStyle.itemSpacing.toPx() else 0f
+            effectiveHeight - style.pointRadius.toPx() * jetLimeStyle.pointStartFactor
+          }
+        }
         val radius = style.pointRadius.toPx() * radiusAnimFactor
         val strokeWidth = style.pointStrokeWidth.toPx()
 
         // Line
-        if (style.position.isNotEnd()) {
-          val yShift = yOffset * (jetLimeStyle.pointStartFactor - 1)
+        // Upward connector only for CENTER placement (connects from top of item to point center)
+        if (style.pointPlacement == PointPlacement.CENTER && style.position.isNotStart()) {
           drawLine(
             brush = lineBrush,
-            start = Offset(
-              x = xOffset,
-              y = yOffset,
-            ),
-            end = Offset(
-              x = xOffset,
-              y = this.size.height + yShift,
-            ),
+            start = Offset(x = xOffset, y = 0f),
+            end = Offset(x = xOffset, y = yOffset),
             strokeWidth = jetLimeStyle.lineThickness.toPx(),
             pathEffect = jetLimeStyle.pathEffect,
           )
+        }
+        // Line logic for CENTER placement: keep continuity through centers
+        if (style.pointPlacement == PointPlacement.CENTER) {
+          // Upward segment (skip for first item)
+          if (style.position.isNotStart()) {
+            drawLine(
+              brush = lineBrush,
+              start = Offset(x = xOffset, y = 0f),
+              end = Offset(x = xOffset, y = yOffset),
+              strokeWidth = jetLimeStyle.lineThickness.toPx(),
+              pathEffect = jetLimeStyle.pathEffect,
+            )
+          }
+          // Downward segment (skip for last item)
+          if (style.position.isNotEnd()) {
+            drawLine(
+              brush = lineBrush,
+              start = Offset(x = xOffset, y = yOffset),
+              end = Offset(x = xOffset, y = this.size.height),
+              strokeWidth = jetLimeStyle.lineThickness.toPx(),
+              pathEffect = jetLimeStyle.pathEffect,
+            )
+          }
+        } else if (style.pointPlacement == PointPlacement.END) {
+          // END placement: draw upward segment (skip first) from top to end point; draw downward only if not last (from point to bottom)
+          if (style.position.isNotStart()) {
+            drawLine(
+              brush = lineBrush,
+              start = Offset(x = xOffset, y = 0f),
+              end = Offset(x = xOffset, y = yOffset),
+              strokeWidth = jetLimeStyle.lineThickness.toPx(),
+              pathEffect = jetLimeStyle.pathEffect,
+            )
+          }
+          if (style.position.isNotEnd()) {
+            drawLine(
+              brush = lineBrush,
+              start = Offset(x = xOffset, y = yOffset),
+              end = Offset(x = xOffset, y = this.size.height),
+              strokeWidth = jetLimeStyle.lineThickness.toPx(),
+              pathEffect = jetLimeStyle.pathEffect,
+            )
+          }
+        } else {
+          // START placement logic (unchanged)
+          if (style.position.isNotEnd()) {
+            val endY = run {
+              val yShift = yOffset * (jetLimeStyle.pointStartFactor - 1)
+              this.size.height + yShift
+            }
+            drawLine(
+              brush = lineBrush,
+              start = Offset(x = xOffset, y = yOffset),
+              end = Offset(x = xOffset, y = endY),
+              strokeWidth = jetLimeStyle.lineThickness.toPx(),
+              pathEffect = jetLimeStyle.pathEffect,
+            )
+          }
         }
 
         // Point background
@@ -217,26 +288,27 @@ private fun PlaceVerticalEventContent(
   alignment: VerticalAlignment,
   content: @Composable () -> Unit,
 ) {
+  val leftPad = if (alignment == VerticalAlignment.LEFT) {
+    // Physical left side padding irrespective of layout direction
+    style.pointRadius * 2 + jetLimeStyle.contentDistance
+  } else {
+    0.dp
+  }
+  val rightPad = if (alignment == VerticalAlignment.RIGHT) {
+    style.pointRadius * 2 + jetLimeStyle.contentDistance
+  } else {
+    0.dp
+  }
   Box(
     modifier = Modifier
       .testTag("VerticalEventContentBox")
       .defaultMinSize(minHeight = style.pointRadius * 2)
-      .padding(
-        start = if (alignment == VerticalAlignment.LEFT) {
-          style.pointRadius * 2 + jetLimeStyle.contentDistance
-        } else {
-          0.dp
-        },
-        end = if (alignment == VerticalAlignment.RIGHT) {
-          style.pointRadius * 2 + jetLimeStyle.contentDistance
-        } else {
-          0.dp
-        },
-        bottom = if (style.position.isNotEnd()) {
-          jetLimeStyle.itemSpacing
-        } else {
-          0.dp
-        },
+      // Use absolutePadding so LEFT/RIGHT alignment refers to physical sides, not start/end semantics.
+      .absolutePadding(
+        left = leftPad,
+        right = rightPad,
+        top = 0.dp,
+        bottom = if (style.position.isNotEnd()) jetLimeStyle.itemSpacing else 0.dp,
       ),
   ) {
     content()
@@ -261,7 +333,9 @@ internal fun HorizontalEvent(
 ) {
   val horizontalAlignment = remember { jetLimeStyle.lineHorizontalAlignment }
   val radiusAnimFactor by calculateRadiusAnimFactor(style)
-  val lineBrush = remember(style, jetLimeStyle) { style.lineBrush ?: jetLimeStyle.lineBrush }
+  val layoutDirection = LocalLayoutDirection.current
+  val isRtl = layoutDirection == LayoutDirection.Rtl
+  val lineBrush = remember(style, jetLimeStyle) { style.lineBrush ?: lineBrush }
 
   Box(
     modifier = modifier
@@ -271,26 +345,91 @@ internal fun HorizontalEvent(
           HorizontalAlignment.TOP -> style.pointRadius.toPx()
           HorizontalAlignment.BOTTOM -> this.size.height - style.pointRadius.toPx()
         }
-        val xOffset = style.pointRadius.toPx() * jetLimeStyle.pointStartFactor
+        val logicalXOffset = when (style.pointPlacement) {
+          PointPlacement.START -> style.pointRadius.toPx() * jetLimeStyle.pointStartFactor
+          PointPlacement.CENTER -> {
+            val effectiveWidth =
+              this.size.width -
+                if (style.position.isNotEnd()) jetLimeStyle.itemSpacing.toPx() else 0f
+            effectiveWidth / 2f
+          }
+
+          PointPlacement.END -> {
+            val effectiveWidth =
+              this.size.width -
+                if (style.position.isNotEnd()) jetLimeStyle.itemSpacing.toPx() else 0f
+            effectiveWidth - style.pointRadius.toPx() * jetLimeStyle.pointStartFactor
+          }
+        }
+        // Mirror logical offset for RTL so that timeline direction flips horizontally
+        val xOffset = if (isRtl) size.width - logicalXOffset else logicalXOffset
         val radius = style.pointRadius.toPx() * radiusAnimFactor
         val strokeWidth = style.pointStrokeWidth.toPx()
 
         // Line
-        if (style.position.isNotEnd()) {
-          val xShift = xOffset * (jetLimeStyle.pointStartFactor - 1)
-          drawLine(
-            brush = lineBrush,
-            start = Offset(
-              x = xOffset,
-              y = yOffset,
-            ),
-            end = Offset(
-              x = this.size.width + xShift,
-              y = yOffset,
-            ),
-            strokeWidth = jetLimeStyle.lineThickness.toPx(),
-            pathEffect = jetLimeStyle.pathEffect,
-          )
+        if (style.pointPlacement == PointPlacement.CENTER) {
+          // Segment towards the "start" of the timeline (left in LTR, right in RTL)
+          if (style.position.isNotStart()) {
+            val startX = if (isRtl) this.size.width else 0f
+            val endX = xOffset
+            drawLine(
+              brush = lineBrush,
+              start = Offset(x = startX, y = yOffset),
+              end = Offset(x = endX, y = yOffset),
+              strokeWidth = jetLimeStyle.lineThickness.toPx(),
+              pathEffect = jetLimeStyle.pathEffect,
+            )
+          }
+          // Segment towards the "end" of the timeline (right in LTR, left in RTL)
+          if (style.position.isNotEnd()) {
+            val startX = xOffset
+            val endX = if (isRtl) 0f else this.size.width
+            drawLine(
+              brush = lineBrush,
+              start = Offset(x = startX, y = yOffset),
+              end = Offset(x = endX, y = yOffset),
+              strokeWidth = jetLimeStyle.lineThickness.toPx(),
+              pathEffect = jetLimeStyle.pathEffect,
+            )
+          }
+        } else if (style.pointPlacement == PointPlacement.END) {
+          // END placement behaves like CENTER w.r.t connection, but anchored near item edge
+          if (style.position.isNotStart()) {
+            val startX = if (isRtl) this.size.width else 0f
+            val endX = xOffset
+            drawLine(
+              brush = lineBrush,
+              start = Offset(x = startX, y = yOffset),
+              end = Offset(x = endX, y = yOffset),
+              strokeWidth = jetLimeStyle.lineThickness.toPx(),
+              pathEffect = jetLimeStyle.pathEffect,
+            )
+          }
+          if (style.position.isNotEnd()) {
+            val startX = xOffset
+            val endX = if (isRtl) 0f else this.size.width
+            drawLine(
+              brush = lineBrush,
+              start = Offset(x = startX, y = yOffset),
+              end = Offset(x = endX, y = yOffset),
+              strokeWidth = jetLimeStyle.lineThickness.toPx(),
+              pathEffect = jetLimeStyle.pathEffect,
+            )
+          }
+        } else {
+          // START placement original behavior, but mirrored for RTL so connectors flow with layout direction
+          if (style.position.isNotEnd()) {
+            val xShift = xOffset * (jetLimeStyle.pointStartFactor - 1)
+            val startX = xOffset
+            val endX = if (isRtl) 0f - xShift else this.size.width + xShift
+            drawLine(
+              brush = lineBrush,
+              start = Offset(x = startX, y = yOffset),
+              end = Offset(x = endX, y = yOffset),
+              strokeWidth = jetLimeStyle.lineThickness.toPx(),
+              pathEffect = jetLimeStyle.pathEffect,
+            )
+          }
         }
 
         // Point background

@@ -20,9 +20,10 @@ kotlin {
 
   @OptIn(org.jetbrains.kotlin.gradle.ExperimentalWasmDsl::class)
   wasmJs {
-    outputModuleName = "composeApp"
     browser {
       commonWebpackConfig {
+        // Keep the legacy prop for now (it still exists in KGP 2.2)
+        // (When tooling surfaces the new API, switch to: mainOutputFileName.set("composeApp.js"))
         outputFileName = "composeApp.js"
         devServer =
           (devServer ?: KotlinWebpackConfig.DevServer()).apply {
@@ -82,13 +83,14 @@ kotlin {
       implementation(compose.material3)
       implementation(compose.ui)
       implementation(compose.components.resources)
+      implementation(compose.materialIconsExtended)
       implementation(compose.components.uiToolingPreview)
 
       // Local library
       implementation(project(":jetlime"))
 
-      // Maven library - For testing
-      // implementation(libs.jetlime)
+      // Uncomment for maven testing
+      // implementation("io.github.pushpalroy:jetlime:4.1.1")
     }
     desktopMain.dependencies {
       implementation(compose.desktop.currentOs)
@@ -101,7 +103,7 @@ kotlin {
 
 android {
   namespace = "com.pushpal.jetlime.sample"
-  compileSdk = 34
+  compileSdk = 36
 
   sourceSets["main"].manifest.srcFile("src/androidMain/AndroidManifest.xml")
   sourceSets["main"].res.srcDirs("src/androidMain/res")
@@ -109,8 +111,8 @@ android {
 
   defaultConfig {
     applicationId = "com.pushpal.jetlime.sample"
-    minSdk = 21
-    targetSdk = 34
+    minSdk = 23
+    targetSdk = 36
     versionCode = 1
     versionName = "1.0"
 

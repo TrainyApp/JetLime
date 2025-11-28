@@ -63,6 +63,7 @@ object JetLimeEventDefaults {
    * Creates a default [JetLimeEventStyle] object with specified parameters.
    *
    * @param position The position of the event relative to the timeline.
+   * @param pointPlacement Controls where the point renders within the item. One of [PointPlacement.START], [PointPlacement.CENTER], or [PointPlacement.END]. Defaults to START.
    * @param pointType The type of point used in the event. Defaults to a filled point.
    * @param pointColor The color of the point. Defaults to the 'onPrimary' color from MaterialTheme's color scheme.
    * @param pointFillColor The fill color of the point. Defaults to the primary color from MaterialTheme's color scheme.
@@ -75,6 +76,7 @@ object JetLimeEventDefaults {
   @Composable
   fun eventStyle(
     position: EventPosition,
+    pointPlacement: PointPlacement = PointPlacement.START,
     pointType: EventPointType = PointType,
     pointColor: Color = MaterialTheme.colorScheme.onPrimary,
     pointFillColor: Color = MaterialTheme.colorScheme.primary,
@@ -83,19 +85,18 @@ object JetLimeEventDefaults {
     pointStrokeWidth: Dp = PointStrokeWidth,
     pointStrokeColor: Color = MaterialTheme.colorScheme.primary,
     lineBrush: Brush? = null,
-  ): JetLimeEventStyle {
-    return JetLimeEventStyle(
-      pointType = pointType,
-      pointColor = pointColor,
-      pointFillColor = pointFillColor,
-      pointRadius = pointRadius,
-      pointAnimation = pointAnimation,
-      pointStrokeWidth = pointStrokeWidth,
-      pointStrokeColor = pointStrokeColor,
-      lineBrush = lineBrush,
+    ): JetLimeEventStyle = JetLimeEventStyle(
+    pointPlacement = pointPlacement,
+    pointType = pointType,
+    pointColor = pointColor,
+    pointFillColor = pointFillColor,
+    pointRadius = pointRadius,
+    pointAnimation = pointAnimation,
+    pointStrokeWidth = pointStrokeWidth,
+    pointStrokeColor = pointStrokeColor,
+    lineBrush = lineBrush,
     ).apply {
-      this.position = position
-    }
+    this.position = position
   }
 
   /**
@@ -111,11 +112,9 @@ object JetLimeEventDefaults {
     initialValue: Float = 1.0f,
     targetValue: Float = 1.2f,
     animationSpec: InfiniteRepeatableSpec<Float> = PointAnimation,
-  ): EventPointAnimation {
-    return EventPointAnimation(
-      initialValue = initialValue,
-      targetValue = targetValue,
-      animationSpec = animationSpec,
-    )
-  }
+  ): EventPointAnimation = EventPointAnimation(
+    initialValue = initialValue,
+    targetValue = targetValue,
+    animationSpec = animationSpec,
+  )
 }
