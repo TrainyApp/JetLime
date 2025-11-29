@@ -1,3 +1,5 @@
+import java.util.Base64
+
 plugins {
   alias(libs.plugins.android.library)
   alias(libs.plugins.kotlin.multiplatform)
@@ -139,6 +141,22 @@ composeCompiler {
   metricsDestination = layout.buildDirectory.dir("compose_compiler/metrics")
 }
 
+publishing {
+  repositories {
+    maven("https://europe-west3-maven.pkg.dev/mik-music/trainyapp") {
+      credentials {
+        username = "_json_key_base64"
+        password = System.getenv("GOOGLE_KEY")?.toByteArray()?.let {
+          Base64.getEncoder().encodeToString(it)
+        }
+      }
+
+      authentication {
+        create<BasicAuthentication>("basic")
+      }
+    }
+  }
+}
 mavenPublishing {
   // Configure publishing to Maven Central
 //  publishToMavenCentral()
