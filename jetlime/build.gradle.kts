@@ -141,7 +141,7 @@ composeCompiler {
 
 mavenPublishing {
   // Configure publishing to Maven Central
-  publishToMavenCentral()
+//  publishToMavenCentral()
 
   // Enable GPG signing for all publications
 //  signAllPublications()
