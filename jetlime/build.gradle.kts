@@ -144,7 +144,7 @@ mavenPublishing {
   publishToMavenCentral()
 
   // Enable GPG signing for all publications
-  signAllPublications()
+//  signAllPublications()
 
   val artifactId = "jetlime"
 
